@@ -11,7 +11,7 @@ import java.util.List;
 
 public class MaxExample {
 
-    private static <T extends Comparable<T>> T max(List<? extends T> data,
+    public static <T extends Comparable<T>> T max(List<? extends T> data,
                                                    Comparator<? super T> cprt)  {
 
         T max = data.get(0);
