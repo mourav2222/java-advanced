@@ -12,6 +12,7 @@ public class Question {
     List<String> answers;
     int num = 0;
     int right = 0;
+    String answered = "";
 
     public Question(String text, List<String> answers, int right) {
         this.text = text;
@@ -41,5 +42,13 @@ public class Question {
 
     public void setNum(int num) {
         this.num = num;
+    }
+
+    public String getAnswered() {
+        return answered;
+    }
+
+    public void setAnswered(String answered) {
+        this.answered = answered;
     }
 }

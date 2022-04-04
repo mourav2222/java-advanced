@@ -135,6 +135,7 @@ public class HelloWorldServer {
                                     String answer = anValue.getValue();
 
                                     Question question = questions.get(q);
+                                    question.setAnswered(answer);
 
                                     boolean right = question.getAnswers().get(question.right).equals(answer);
                                     System.out.println("answer: " + answer + " right: " + right);
@@ -236,7 +237,7 @@ public class HelloWorldServer {
 //                                            exchange.getResponseSender().send(stringWriter.toString());
 //
 //                                        } catch (Exception e) {
-////                                            if (exchange.getStatusCode() == 500) {
+//                                            if (exchange.getStatusCode() == 500) {
 //
 //                                            StringWriter sw = new StringWriter();
 //                                            PrintWriter pw = new PrintWriter(sw);
@@ -250,7 +251,7 @@ public class HelloWorldServer {
 //                                            Sender sender = exchange.getResponseSender();
 //                                            sender.send(errorPage);
 //
-////                                            }
+//                                            }
 //
 //                                        }
 //                                    }
