@@ -8,6 +8,7 @@ import io.undertow.Handlers;
 import io.undertow.Undertow;
 import io.undertow.io.IoCallback;
 import io.undertow.io.Sender;
+import io.undertow.server.DefaultResponseListener;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.server.OpenListener;
@@ -24,6 +25,7 @@ import io.undertow.util.Headers;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.*;
 
@@ -61,9 +63,8 @@ public class HelloWorldServer {
         }
 
         Undertow server = Undertow.builder()
-                .addHttpListener(8080, "localhost")
+                .addHttpListener(8082, "localhost")
                 .setHandler(Handlers.path()
-
                                 .addPrefixPath("/html", new ResourceHandler(new ClassPathResourceManager(
                                         HelloWorldServer.class.getClassLoader(), "html")))
 
@@ -163,19 +164,20 @@ public class HelloWorldServer {
 
                                 }))
 
-                                .addExactPath("qu", exchange -> {
-
-                                    int q = 0;
-                                    String qstring = exchange.getQueryParameters().getOrDefault("q", EMPTY_DEQUE).peek();
-                                    if (qstring != null) {
-                                        q = Integer.parseInt(qstring);
-                                    }
-
-                                    exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/html");
-                                    StringWriter stringWriter = new StringWriter();
-                                    quTemplate.process(questions.get(q), stringWriter);
-                                    exchange.getResponseSender().send(stringWriter.toString());
-                                })
+//                                .addExactPath("qu", exchange -> {
+//
+//
+//                                    int q = 0;
+//                                    String qstring = exchange.getQueryParameters().getOrDefault("q", EMPTY_DEQUE).peek();
+//                                    if (qstring != null) {
+//                                        q = Integer.parseInt(qstring);
+//                                    }
+//
+//                                    exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/html");
+//                                    StringWriter stringWriter = new StringWriter();
+//                                    quTemplate.process(questions.get(q), stringWriter);
+//                                    exchange.getResponseSender().send(stringWriter.toString());
+//                                })
 
                                 .addExactPath("hello", exchange -> {
 
@@ -183,6 +185,76 @@ public class HelloWorldServer {
                                     exchange.getResponseSender().send("Hello World");
                                 })
 
+                                .addExactPath("qu", new SimpleErrorPageHandler(new HttpHandler() {
+                                    @Override
+                                    public void handleRequest(HttpServerExchange exchange) throws Exception {
+                                        int q = 0;
+                                        String qstring = exchange.getQueryParameters().getOrDefault("q", EMPTY_DEQUE).peek();
+                                        if (qstring != null) {
+                                            q = Integer.parseInt(qstring);
+                                        }
+
+                                        exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/html");
+                                        StringWriter stringWriter = new StringWriter();
+                                        quTemplate.process(questions.get(q), stringWriter);
+                                        exchange.getResponseSender().send(stringWriter.toString());
+                                    }
+                                }))
+
+//                                .addExactPath("qu", new ErrorHandler(new HttpHandler() {
+//                                    @Override
+//                                    public void handleRequest(HttpServerExchange exchange) throws Exception {
+//
+//                                        int q = 0;
+//                                        String qstring = exchange.getQueryParameters().getOrDefault("q", EMPTY_DEQUE).peek();
+//                                        if (qstring != null) {
+//                                            q = Integer.parseInt(qstring);
+//                                        }
+//
+//                                        exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/html");
+//                                        StringWriter stringWriter = new StringWriter();
+//                                        quTemplate.process(questions.get(q), stringWriter);
+//                                        exchange.getResponseSender().send(stringWriter.toString());
+//                                    }
+//                                }))
+
+//                                .addExactPath("qu", new HttpHandler() {
+//
+//                                    @Override
+//                                    public void handleRequest(HttpServerExchange exchange) {
+//
+//                                        try {
+//                                            int q = 0;
+//                                            String qstring = exchange.getQueryParameters().getOrDefault("q", EMPTY_DEQUE).peek();
+//                                            if (qstring != null) {
+//                                                q = Integer.parseInt(qstring);
+//                                            }
+//
+//                                            exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/html");
+//                                            StringWriter stringWriter = new StringWriter();
+//                                            quTemplate.process(questions.get(q), stringWriter);
+//                                            exchange.getResponseSender().send(stringWriter.toString());
+//
+//                                        } catch (Exception e) {
+////                                            if (exchange.getStatusCode() == 500) {
+//
+//                                            StringWriter sw = new StringWriter();
+//                                            PrintWriter pw = new PrintWriter(sw);
+//                                            e.printStackTrace(pw);
+//                                            final String errorPage = "<html><head><title>Error</title></head><body>Internal Error </br>"
+//                                                    + sw.toString() + "</body></html>";
+//
+//
+//                                            exchange.getResponseHeaders().put(Headers.CONTENT_LENGTH, "" + errorPage.length());
+//                                            exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/html");
+//                                            Sender sender = exchange.getResponseSender();
+//                                            sender.send(errorPage);
+//
+////                                            }
+//
+//                                        }
+//                                    }
+//                                })
 
                 ).build();
         server.start();
@@ -211,3 +283,4 @@ class BlockingHandler implements HttpHandler {
 
     }
 }
+
