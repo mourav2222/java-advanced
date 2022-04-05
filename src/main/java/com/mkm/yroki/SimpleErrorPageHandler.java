@@ -30,7 +30,6 @@ public class SimpleErrorPageHandler implements HttpHandler {
 //                Set<Integer> codes = responseCodes;
                 if (exchange.getStatusCode() == 500) {
 
-
                     Throwable throwable = exchange.getAttachment(EXCEPTION);
                     StringWriter sw = new StringWriter();
                     PrintWriter pw = new PrintWriter(sw);

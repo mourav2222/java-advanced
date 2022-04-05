@@ -51,4 +51,9 @@ public class Question {
     public void setAnswered(String answered) {
         this.answered = answered;
     }
+
+    public boolean isRightAnswer(String answer) {
+        boolean right = getAnswers().get(this.right).equals(answer);
+        return right;
+    }
 }

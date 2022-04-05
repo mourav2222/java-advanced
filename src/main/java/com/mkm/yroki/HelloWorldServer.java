@@ -35,10 +35,10 @@ import java.util.*;
 
 public class HelloWorldServer {
 
-    static final ArrayDeque<String> emptyDeque = new ArrayDeque<>();
+    static final ArrayDeque<String> emptyDeque = new ArrayDeque<>(1);
 
     static final AttachmentKey<String> StringID = AttachmentKey.create(String.class);
-    private static Deque<String> EMPTY_DEQUE = new ArrayDeque<>(0);
+    private static final Deque<String> EMPTY_DEQUE = new ArrayDeque<>(1);
 
     public static void main(String[] args) throws IOException {
 
@@ -50,6 +50,7 @@ public class HelloWorldServer {
 
         final Template nameTemplate = cfg.getTemplate("name.xhtml");
         final Template quTemplate = cfg.getTemplate("question.xhtml");
+        EMPTY_DEQUE.addLast("");
 
         List<Question> questions = Arrays.asList(
                 new Question("2 + 2", Arrays.asList("2", "5", "4"), 2),
@@ -86,7 +87,8 @@ public class HelloWorldServer {
                                     }
                                 }))
                                 .addPrefixPath("/", exchange -> {
-                                    String name = exchange.getQueryParameters().getOrDefault("name", EMPTY_DEQUE).poll();
+                                    String name = exchange.getQueryParameters()
+                                            .getOrDefault("name", EMPTY_DEQUE).poll();
 
 //                            Optional<Deque<String>> opt = Optional.ofNullable(exchange.getQueryParameters().get());
 //                            String name = opt.map(d -> d.peek()).orElse("default Name");
@@ -123,21 +125,57 @@ public class HelloWorldServer {
                                     exchange.getResponseSender().send(stringWriter.toString());
 
                                 }))
-                                .addExactPath("answer", new EagerFormParsingHandler().setNext((exchange) -> {
+//                                .addExactPath("answer", new EagerFormParsingHandler().setNext((exchange) -> {
+//
+//                                    FormData form = exchange.getAttachment(FormDataParser.FORM_DATA);
+//
+//                                    FormData.FormValue qValue = form.getFirst("q");
+//                                    String qfw = qValue.getValue();
+//                                    int q = Integer.parseInt(qfw);
+//
+//                                    FormData.FormValue anValue = form.getFirst("answer");
+//                                    String answer = anValue.getValue();
+//
+//                                    Question question = questions.get(q);
+//                                    question.setAnswered(answer);
+//
+//                                    boolean right = question.getAnswers().get(question.right).equals(answer);
+//                                    System.out.println("answer: " + answer + " right: " + right);
+//
+//                                    int rightAnswers = 0;
+//                                    Cookie cookie = exchange.getRequestCookie("rightAnswers");
+//                                    if (cookie != null) {
+//                                        rightAnswers = Integer.parseInt(cookie.getValue());
+//                                    }
+//                                    if (right)
+//                                        rightAnswers += 1;
+//
+//                                    if (q < questions.size() - 1) {
+//                                        exchange.setResponseCookie(new CookieImpl("rightAnswers").setValue(rightAnswers + ""));
+//                                        Handlers.redirect("qu?q=" + (q + 1)).handleRequest(exchange);
+//                                    } else {
+//                                        if (cookie != null) {
+//                                            exchange.setResponseCookie(cookie
+//                                                    .setValue("0")
+//                                                    .setMaxAge(0));
+//                                        }
+//
+//                                        exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
+//                                        exchange.getResponseSender().send("Right answers: " + rightAnswers + " from questions " + questions.size());
+//                                    }
+//
+//
+//                                }))
 
-                                    FormData form = exchange.getAttachment(FormDataParser.FORM_DATA);
+                                .addExactPath("answer", new MyEagerFormParsingHandler().setNext((exchange) -> {
 
-                                    FormData.FormValue qValue = form.getFirst("q");
-                                    String qfw = qValue.getValue();
-                                    int q = Integer.parseInt(qfw);
-
-                                    FormData.FormValue anValue = form.getFirst("answer");
-                                    String answer = anValue.getValue();
+                                    int q = MyEagerFormParsingHandler.getFormIntValue("q", exchange);
+                                    String answer = MyEagerFormParsingHandler.getFormStringValue("answer", exchange);
 
                                     Question question = questions.get(q);
                                     question.setAnswered(answer);
 
-                                    boolean right = question.getAnswers().get(question.right).equals(answer);
+                                    boolean right = question.isRightAnswer(answer);
                                     System.out.println("answer: " + answer + " right: " + right);
 
                                     int rightAnswers = 0;
@@ -266,7 +304,7 @@ public class HelloWorldServer {
 
 class BlockingHandler implements HttpHandler {
 
-    HttpHandler next;
+    final HttpHandler next;
 
     public BlockingHandler(HttpHandler next) {
         this.next = next;
